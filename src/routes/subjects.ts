@@ -10,8 +10,8 @@ router.get('/', async (req, res) => {
     try {
         const {search, department, page = 1, limit = 10} = req.query;
 
-        const currentPage = Math.max(1, +page);
-        const limitPerPage = Math.max(1, +limit);
+        const currentPage = Math.max(1, parseInt(String(page), 10) || 1);
+        const limitPerPage = Math.min(Math.max(1, parseInt(String(limit), 10) || 10), 100);
 
         // offset defines how many record or row should we skip
         const offset = (currentPage - 1) * limitPerPage;
@@ -37,7 +37,7 @@ router.get('/', async (req, res) => {
         const whereClause = filterConditions.length > 0 ? and(...filterConditions) : undefined;
 
         const countResult = await db
-            .select({count: sql<number>`count(*)`})
+            .select({count: sql`count(*)`.mapWith(Number)})
             .from(subjects)
             .leftJoin(departments, eq(subjects.departmentId, departments.id))
             .where(whereClause);
